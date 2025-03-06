@@ -2,94 +2,111 @@ import { useState, useEffect, useCallback } from 'react';
 
 const INITIAL_HEALTH = 100;
 const ATTACK_DAMAGE = 10;
-const ATTACK_RANGE = 2; // Distance within which attacks can land
+const ROUND_TIME = 60; // 60 seconds per round
 
-export const useGameLogic = () => {
+export const useGameLogic = (burgerRef, jeanRef) => {
   const [burgerHealth, setBurgerHealth] = useState(INITIAL_HEALTH);
   const [jeanHealth, setJeanHealth] = useState(INITIAL_HEALTH);
-  const [burgerPosition, setBurgerPosition] = useState([-3, 0, 0]);
-  const [jeanPosition, setJeanPosition] = useState([3, 0, 0]);
-  const [burgerState, setBurgerState] = useState('idle');
-  const [jeanState, setJeanState] = useState('idle');
-  const [gameState, setGameState] = useState('start');
+  const [gameState, setGameState] = useState('ready'); // 'ready', 'fighting', 'roundOver', 'gameOver'
   const [winner, setWinner] = useState(null);
+  const [roundTime, setRoundTime] = useState(ROUND_TIME);
+  const [burgerAnimation, setBurgerAnimation] = useState('idle');
+  const [jeanAnimation, setJeanAnimation] = useState('idle');
 
   const resetGame = useCallback(() => {
     setBurgerHealth(INITIAL_HEALTH);
     setJeanHealth(INITIAL_HEALTH);
-    setBurgerPosition([-3, 0, 0]);
-    setJeanPosition([3, 0, 0]);
-    setBurgerState('idle');
-    setJeanState('idle');
-    setGameState('start');
+    setGameState('ready');
     setWinner(null);
+    setRoundTime(ROUND_TIME);
+    setBurgerAnimation('idle');
+    setJeanAnimation('idle');
   }, []);
 
-  const attack = useCallback((attacker) => {
-    if (gameState !== 'fighting') return;
+  const startRound = useCallback(() => {
+    setGameState('fighting');
+  }, []);
 
-    const [attackerState, setAttackerState] = attacker === 'burger' ? [burgerState, setBurgerState] : [jeanState, setJeanState];
-    const [defenderHealth, setDefenderHealth] = attacker === 'burger' ? [jeanHealth, setJeanHealth] : [burgerHealth, setBurgerHealth];
-    const [attackerPosition, defenderPosition] = attacker === 'burger' ? [burgerPosition, jeanPosition] : [jeanPosition, burgerPosition];
-
-    if (attackerState !== 'attack') {
-      setAttackerState('attack');
-      setTimeout(() => setAttackerState('idle'), 500); // Reset to idle after attack animation
-
-      // Check if attack lands
-      const distance = Math.abs(attackerPosition[0] - defenderPosition[0]);
-      if (distance <= ATTACK_RANGE) {
-        setDefenderHealth(prev => {
-          const newHealth = Math.max(0, prev - ATTACK_DAMAGE);
-          if (newHealth === 0) {
-            setGameState('end');
-            setWinner(attacker);
-          }
-          return newHealth;
-        });
-      }
+  const endRound = useCallback(() => {
+    setGameState('roundOver');
+    if (burgerHealth > jeanHealth) {
+      setWinner('Burger');
+    } else if (jeanHealth > burgerHealth) {
+      setWinner('Jean');
+    } else {
+      setWinner('Draw');
     }
-  }, [gameState, burgerState, jeanState, burgerHealth, jeanHealth, burgerPosition, jeanPosition]);
+  }, [burgerHealth, jeanHealth]);
 
-  const move = useCallback((character, direction) => {
+  const attack = useCallback((attacker, defender) => {
     if (gameState !== 'fighting') return;
 
-    const [position, setPosition] = character === 'burger' ? [burgerPosition, setBurgerPosition] : [jeanPosition, setJeanPosition];
-    const newPosition = [...position];
-    newPosition[0] += direction * 0.1; // Move 0.1 units in the specified direction
-    setPosition(newPosition);
-  }, [gameState, burgerPosition, jeanPosition]);
+    const attackerAnimation = attacker === 'Burger' ? setBurgerAnimation : setJeanAnimation;
+    const defenderAnimation = defender === 'Burger' ? setBurgerAnimation : setJeanAnimation;
+    const setDefenderHealth = defender === 'Burger' ? setBurgerHealth : setJeanHealth;
 
+    attackerAnimation('attack');
+    setTimeout(() => attackerAnimation('idle'), 500);
+
+    // Simple collision detection
+    if (Math.random() > 0.3) { // 70% chance to hit
+      defenderAnimation('hurt');
+      setTimeout(() => defenderAnimation('idle'), 500);
+      setDefenderHealth(prevHealth => Math.max(prevHealth - ATTACK_DAMAGE, 0));
+    }
+  }, [gameState]);
+
+  // Game loop
   useEffect(() => {
-    const handleKeyPress = (e) => {
-      switch (e.key) {
-        case 'a': move('burger', -1); break;
-        case 'd': move('burger', 1); break;
-        case 'w': attack('burger'); break;
-        case 'ArrowLeft': move('jean', -1); break;
-        case 'ArrowRight': move('jean', 1); break;
-        case 'ArrowUp': attack('jean'); break;
-        case ' ': 
-          if (gameState === 'start' || gameState === 'end') {
-            setGameState('fighting');
+    if (gameState !== 'fighting') return;
+
+    const timer = setInterval(() => {
+      setRoundTime(prevTime => {
+        if (prevTime <= 0 || burgerHealth <= 0 || jeanHealth <= 0) {
+          clearInterval(timer);
+          endRound();
+          return 0;
+        }
+        return prevTime - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [gameState, burgerHealth, jeanHealth, endRound]);
+
+  // Key press handler
+  useEffect(() => {
+    const handleKeyPress = (event) => {
+      switch (event.key) {
+        case 'a':
+          attack('Burger', 'Jean');
+          break;
+        case 'j':
+          attack('Jean', 'Burger');
+          break;
+        case ' ':
+          if (gameState === 'ready' || gameState === 'roundOver') {
+            startRound();
           }
+          break;
+        default:
           break;
       }
     };
 
     window.addEventListener('keydown', handleKeyPress);
     return () => window.removeEventListener('keydown', handleKeyPress);
-  }, [attack, move, gameState]);
+  }, [attack, gameState, startRound]);
 
   return {
     burgerHealth,
     jeanHealth,
-    burgerPosition,
-    jeanPosition,
-    burgerState,
-    jeanState,
     gameState,
     winner,
-    resetGame
+    roundTime,
+    burgerAnimation,
+    jeanAnimation,
+    resetGame,
+    startRound,
   };
 };
