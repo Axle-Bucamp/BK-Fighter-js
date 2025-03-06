@@ -1,25 +1,19 @@
-# Burger vs Jean: The Ultimate Showdown
+# Next.js Fighting Game
 
-A fun and exciting 2D fighting game built with React, Three.js, and Next.js. Face off as either Burger or Jean in an epic battle of culinary proportions!
+A simple 2D fighting game built with Next.js, React Three Fiber, and Three.js. This project showcases basic game mechanics, character animations, and audio management in a web-based environment.
 
 ## Technologies Used
 
 - Next.js
 - React
 - Three.js
-- React Three Fiber (R3F)
-- @react-three/drei
+- React Three Fiber
+- CSS Modules
 
 ## Installation Instructions
 
-1. Clone the repository:
-   ```
-   git clone https://github.com/your-username/burger-vs-jean.git
-   ```
-2. Navigate to the project directory:
-   ```
-   cd burger-vs-jean
-   ```
+1. Clone the repository
+2. Navigate to the project directory
 3. Install dependencies:
    ```
    npm install
@@ -28,48 +22,45 @@ A fun and exciting 2D fighting game built with React, Three.js, and Next.js. Fac
    ```
    npm run dev
    ```
-5. Open your browser and visit `http://localhost:3000`
+5. Open [http://localhost:3000](http://localhost:3000) in your browser
 
 ## How to Play
 
-1. From the main menu, select "Start Game" or choose your character in "Character Selection".
-2. Use the controls to move your character and attack your opponent.
-3. Reduce your opponent's health to zero to win the match!
+1. Start the game from the main menu
+2. Choose your character in the character selection screen
+3. Fight against the opponent using the controls below
+4. Reduce your opponent's health to zero to win
 
 ## Controls
 
-- Burger:
-  - Move Left: A
-  - Move Right: D
-  - Attack: W
+- Player 1 (Burger):
+  - 'A' key: Attack
+  - 'H' key: Get hurt (for testing)
 
-- Jean:
-  - Move Left: Left Arrow
-  - Move Right: Right Arrow
-  - Attack: Up Arrow
-
-- General:
-  - Start/Restart Game: Spacebar
+- Player 2 (Jean):
+  - 'J' key: Attack
+  - 'K' key: Get hurt (for testing)
 
 ## Features
 
-- Two unique characters: Burger and Jean
-- Dynamic 3D fighting arena
+- Main menu with options for Start Game, Character Selection, and Options
 - Character selection screen
-- Main menu with options
-- Volume control for music and sound effects
-- Particle effects for impactful attacks
-- Health bars and game state display
+- Options menu for adjusting music and sound effect volumes
+- Real-time combat with health bars
+- Basic attack and hurt animations
 - Background music and sound effects
+- Particle effects for impacts
+- Detailed background scene
 
 ## Future Improvements
 
-- Add more characters with unique abilities
-- Implement combo systems and special moves
-- Create additional stages with interactive elements
-- Add online multiplayer functionality
-- Implement a story mode with character progression
-- Enhance graphics and animations
-- Add customization options for characters
-
-Feel free to contribute to the project by submitting pull requests or reporting issues!
+1. Add more characters with unique abilities
+2. Implement combo systems and special moves
+3. Create multiple stages/backgrounds
+4. Add online multiplayer functionality
+5. Improve graphics and animations
+6. Implement a scoring system and leaderboards
+7. Add difficulty levels for AI opponents
+8. Create a story mode with multiple levels
+9. Optimize performance for mobile devices
+10. Add support for gamepad controllers
