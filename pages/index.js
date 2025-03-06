@@ -2,6 +2,7 @@ import { Suspense } from 'react';
 import { Canvas } from '@react-three/fiber';
 import dynamic from 'next/dynamic';
 
+// Dynamically import the Scene component with SSR disabled
 const Scene = dynamic(() => import('../components/Scene'), { ssr: false });
 
 export default function Home() {
