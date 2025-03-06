@@ -1,9 +1,9 @@
-import { Suspense } from 'react';
-import { Canvas } from '@react-three/fiber';
-import dynamic from 'next/dynamic';
+import { Suspense } from 'react'
+import dynamic from 'next/dynamic'
+import { Canvas } from '@react-three/fiber'
 
 // Dynamically import the Scene component with SSR disabled
-const Scene = dynamic(() => import('../components/Scene'), { ssr: false });
+const Scene = dynamic(() => import('../components/Scene'), { ssr: false })
 
 export default function Home() {
   return (
@@ -14,5 +14,5 @@ export default function Home() {
         </Suspense>
       </Canvas>
     </div>
-  );
+  )
 }
