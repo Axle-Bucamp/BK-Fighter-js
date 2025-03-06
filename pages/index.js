@@ -1,14 +1,17 @@
-import dynamic from 'next/dynamic'
-import { Suspense } from 'react'
+import { Suspense } from 'react';
+import { Canvas } from '@react-three/fiber';
+import dynamic from 'next/dynamic';
 
-const Scene = dynamic(() => import('../components/Scene'), { ssr: false })
+const Scene = dynamic(() => import('../components/Scene'), { ssr: false });
 
 export default function Home() {
   return (
     <div style={{ width: '100vw', height: '100vh' }}>
-      <Suspense fallback={<div>Loading...</div>}>
-        <Scene />
-      </Suspense>
+      <Canvas>
+        <Suspense fallback={null}>
+          <Scene />
+        </Suspense>
+      </Canvas>
     </div>
-  )
+  );
 }
