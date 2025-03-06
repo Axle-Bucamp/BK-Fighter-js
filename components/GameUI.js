@@ -1,13 +1,22 @@
 import React from 'react';
-import styles from './GameUI.module.css';
+import styles from '../styles/GameUI.module.css';
 
-const GameUI = ({ gameState, burgerHealth, jeanHealth, winner }) => {
+const GameUI = ({ gameState, burgerHealth, jeanHealth, winner, onStartGame, onMainMenu }) => {
   return (
     <div className={styles.gameUI}>
-      {gameState === 'start' && (
-        <div className={styles.startScreen}>
-          <h1>Burger vs Jean</h1>
-          <p>Press Space to Start</p>
+      {gameState === 'mainMenu' && (
+        <div className={styles.mainMenu}>
+          <h1>Fighting Game</h1>
+          <button onClick={onStartGame}>Start Game</button>
+          {/* Add more menu options here */}
+        </div>
+      )}
+      
+      {gameState === 'characterSelection' && (
+        <div className={styles.characterSelection}>
+          <h2>Select Your Character</h2>
+          {/* Add character selection options here */}
+          <button onClick={onMainMenu}>Back to Main Menu</button>
         </div>
       )}
       
@@ -27,7 +36,8 @@ const GameUI = ({ gameState, burgerHealth, jeanHealth, winner }) => {
       {gameState === 'gameOver' && (
         <div className={styles.gameOverScreen}>
           <h2>{winner} Wins!</h2>
-          <p>Press Space to Restart</p>
+          <button onClick={onStartGame}>Play Again</button>
+          <button onClick={onMainMenu}>Main Menu</button>
         </div>
       )}
     </div>
