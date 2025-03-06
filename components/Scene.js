@@ -1,74 +1,119 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, Suspense } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls } from '@react-three/drei';
 import BurgerCharacter from './BurgerCharacter';
 import JeanCharacter from './JeanCharacter';
-import { useGameLogic } from './GameLogic';
 import GameUI from './GameUI';
 import AudioManager from './AudioManager';
 import ParticleSystem from './ParticleSystem';
 import Background from './Background';
+import useGameLogic from '../hooks/useGameLogic';
+import MainMenu from './MainMenu';
+import CharacterSelection from './CharacterSelection';
 
-function Floor() {
-  return (
-    <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.5, 0]}>
-      <planeBufferGeometry attach="geometry" args={[10, 10]} />
-      <meshStandardMaterial attach="material" color="green" />
-    </mesh>
-  );
-}
-
-export default function Scene() {
+const Scene = () => {
+  const [gameState, setGameState] = useState('mainMenu');
+  const [selectedCharacter, setSelectedCharacter] = useState(null);
+  const [impactPosition, setImpactPosition] = useState(null);
   const {
-    burgerHealth,
-    jeanHealth,
     burgerPosition,
     jeanPosition,
+    burgerHealth,
+    jeanHealth,
     burgerState,
     jeanState,
-    gameState,
     winner,
-    onAttack,
-    onHit
+    startGame,
+    attackBurger,
+    attackJean,
+    moveBurger,
+    moveJean,
   } = useGameLogic();
 
-  const [impactPosition, setImpactPosition] = useState(null);
-
-  const handleAttack = (attacker) => {
-    onAttack(attacker);
-    // Set impact position based on the defender's position
-    setImpactPosition(attacker === 'burger' ? jeanPosition : burgerPosition);
-    // Reset impact position after a short delay
-    setTimeout(() => setImpactPosition(null), 500);
+  const handleAttack = (attacker, target) => {
+    if (attacker === 'burger') {
+      attackJean();
+      setImpactPosition(jeanPosition);
+    } else {
+      attackBurger();
+      setImpactPosition(burgerPosition);
+    }
+    setTimeout(() => setImpactPosition(null), 300);
   };
+
+  const handleStartGame = () => {
+    startGame();
+    setGameState('playing');
+  };
+
+  const handleCharacterSelection = () => {
+    setGameState('characterSelection');
+  };
+
+  const handleOptions = () => {
+    // Implement options menu logic here
+    console.log('Options menu clicked');
+  };
+
+  const handleSelectCharacter = (character) => {
+    setSelectedCharacter(character);
+    setGameState('playing');
+    startGame();
+  };
+
+  const handleBackToMainMenu = () => {
+    setGameState('mainMenu');
+  };
+
+  if (gameState === 'mainMenu') {
+    return (
+      <MainMenu
+        onStartGame={handleStartGame}
+        onCharacterSelection={handleCharacterSelection}
+        onOptions={handleOptions}
+      />
+    );
+  }
+
+  if (gameState === 'characterSelection') {
+    return (
+      <CharacterSelection
+        onSelectCharacter={handleSelectCharacter}
+        onBack={handleBackToMainMenu}
+      />
+    );
+  }
 
   return (
     <>
-      <Canvas camera={{ position: [0, 5, 10] }}>
+      <Canvas>
+        <OrbitControls />
         <ambientLight intensity={0.5} />
         <pointLight position={[10, 10, 10]} />
-        <OrbitControls />
-        <Background />
-        <Floor />
-        <BurgerCharacter position={burgerPosition} rotation={[0, Math.PI / 2, 0]} animationState={burgerState} />
-        <JeanCharacter position={jeanPosition} rotation={[0, -Math.PI / 2, 0]} animationState={jeanState} />
-        {impactPosition && (
-          <ParticleSystem position={impactPosition} color="#ff0000" count={50} />
-        )}
-        <AudioManager 
-          gameState={gameState} 
-          onAttack={() => handleAttack('burger')} 
-          onHit={() => handleAttack('jean')} 
-          onGameStart={gameState === 'start'} 
-          onGameEnd={gameState === 'end'} 
+        <Suspense fallback={null}>
+          <Background />
+          <BurgerCharacter position={burgerPosition} animationState={burgerState} />
+          <JeanCharacter position={jeanPosition} animationState={jeanState} />
+          {impactPosition && <ParticleSystem position={impactPosition} />}
+        </Suspense>
+        <AudioManager
+          gameState={gameState}
+          onAttack={() => handleAttack('burger', 'jean')}
+          onHit={() => handleAttack('jean', 'burger')}
+          onGameStart={() => setGameState('playing')}
+          onGameEnd={() => setGameState('gameOver')}
         />
       </Canvas>
-      <GameUI 
+      <GameUI
         gameState={gameState}
         burgerHealth={burgerHealth}
         jeanHealth={jeanHealth}
         winner={winner}
+        onStartGame={handleStartGame}
+        onMainMenu={handleBackToMainMenu}
       />
     </>
   );
-}
+};
+
+export default Scene;
