@@ -10,11 +10,15 @@ import Background from './Background';
 import useGameLogic from '../hooks/useGameLogic';
 import MainMenu from './MainMenu';
 import CharacterSelection from './CharacterSelection';
+import OptionsMenu from './OptionsMenu';
 
 const Scene = () => {
   const [gameState, setGameState] = useState('mainMenu');
   const [selectedCharacter, setSelectedCharacter] = useState(null);
   const [impactPosition, setImpactPosition] = useState(null);
+  const [musicVolume, setMusicVolume] = useState(0.5);
+  const [sfxVolume, setSfxVolume] = useState(0.5);
+
   const {
     burgerPosition,
     jeanPosition,
@@ -51,8 +55,7 @@ const Scene = () => {
   };
 
   const handleOptions = () => {
-    // Implement options menu logic here
-    console.log('Options menu clicked');
+    setGameState('options');
   };
 
   const handleSelectCharacter = (character) => {
@@ -63,6 +66,14 @@ const Scene = () => {
 
   const handleBackToMainMenu = () => {
     setGameState('mainMenu');
+  };
+
+  const handleMusicVolumeChange = (volume) => {
+    setMusicVolume(volume);
+  };
+
+  const handleSfxVolumeChange = (volume) => {
+    setSfxVolume(volume);
   };
 
   return (
@@ -87,6 +98,8 @@ const Scene = () => {
           onHit={() => handleAttack('jean', 'burger')}
           onGameStart={() => setGameState('playing')}
           onGameEnd={() => setGameState('gameOver')}
+          musicVolume={musicVolume}
+          sfxVolume={sfxVolume}
         />
       </Canvas>
       {gameState === 'mainMenu' && (
@@ -100,6 +113,15 @@ const Scene = () => {
         <CharacterSelection
           onSelectCharacter={handleSelectCharacter}
           onBack={handleBackToMainMenu}
+        />
+      )}
+      {gameState === 'options' && (
+        <OptionsMenu
+          onBack={handleBackToMainMenu}
+          musicVolume={musicVolume}
+          sfxVolume={sfxVolume}
+          onMusicVolumeChange={handleMusicVolumeChange}
+          onSfxVolumeChange={handleSfxVolumeChange}
         />
       )}
       <GameUI
