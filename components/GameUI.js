@@ -11,6 +11,7 @@ const GameUI = ({
   onResetGame,
   onCharacterSelect,
   selectedCharacter,
+  onShowOptions,
 }) => {
   const renderHealthBar = (health, character) => (
     <div className={styles.healthBarContainer}>
@@ -33,7 +34,7 @@ const GameUI = ({
         <MainMenu
           onStartGame={onStartGame}
           onCharacterSelection={() => onCharacterSelect(null)}
-          onOptions={() => {}} // Implement options menu logic
+          onOptions={onShowOptions}
         />
       );
     case 'characterSelection':
