@@ -5,6 +5,7 @@ import BurgerCharacter from './BurgerCharacter';
 import JeanCharacter from './JeanCharacter';
 import { useGameLogic } from './GameLogic';
 import GameUI from './GameUI';
+import AudioManager from './AudioManager';
 
 function Floor() {
   return (
@@ -33,7 +34,9 @@ export default function Scene() {
     burgerState,
     jeanState,
     gameState,
-    winner
+    winner,
+    onAttack,
+    onHit
   } = useGameLogic();
 
   return (
@@ -46,6 +49,13 @@ export default function Scene() {
         <Background />
         <BurgerCharacter position={burgerPosition} rotation={[0, Math.PI / 2, 0]} animationState={burgerState} />
         <JeanCharacter position={jeanPosition} rotation={[0, -Math.PI / 2, 0]} animationState={jeanState} />
+        <AudioManager 
+          gameState={gameState} 
+          onAttack={onAttack} 
+          onHit={onHit} 
+          onGameStart={gameState === 'start'} 
+          onGameEnd={gameState === 'end'} 
+        />
       </Canvas>
       <GameUI 
         gameState={gameState}
