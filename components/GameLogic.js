@@ -1,4 +1,8 @@
-import { useState, useEffect, useCallback } from 'react';
+import {
+  useCallback,
+  useEffect,
+  useState,
+} from 'react';
 
 const INITIAL_HEALTH = 100;
 const ATTACK_DAMAGE = 10;
@@ -12,6 +16,7 @@ export const useGameLogic = (burgerRef, jeanRef) => {
   const [roundTime, setRoundTime] = useState(ROUND_TIME);
   const [burgerAnimation, setBurgerAnimation] = useState('idle');
   const [jeanAnimation, setJeanAnimation] = useState('idle');
+  const [selectedCharacter, setSelectedCharacter] = useState(null); // Added state for selectedCharacter
 
   const resetGame = useCallback(() => {
     setBurgerHealth(INITIAL_HEALTH);
@@ -21,6 +26,7 @@ export const useGameLogic = (burgerRef, jeanRef) => {
     setRoundTime(ROUND_TIME);
     setBurgerAnimation('idle');
     setJeanAnimation('idle');
+    setSelectedCharacter(null); // Reset selectedCharacter as well
   }, []);
 
   const startRound = useCallback(() => {
@@ -38,22 +44,25 @@ export const useGameLogic = (burgerRef, jeanRef) => {
     }
   }, [burgerHealth, jeanHealth]);
 
-  const attack = useCallback((attacker, defender) => {
-    if (gameState !== 'fighting') return;
+  const handleAttack = useCallback((attacker) => {
+    if (gameState !== 'fighting') return [false, null];
 
     const attackerAnimation = attacker === 'Burger' ? setBurgerAnimation : setJeanAnimation;
-    const defenderAnimation = defender === 'Burger' ? setBurgerAnimation : setJeanAnimation;
-    const setDefenderHealth = defender === 'Burger' ? setBurgerHealth : setJeanHealth;
+    const defenderAnimation = attacker === 'Burger' ? setJeanAnimation : setBurgerAnimation;
+    const setDefenderHealth = attacker === 'Burger' ? setJeanHealth : setBurgerHealth;
 
     attackerAnimation('attack');
     setTimeout(() => attackerAnimation('idle'), 500);
 
-    // Simple collision detection
-    if (Math.random() > 0.3) { // 70% chance to hit
+    const hitChance = Math.random();
+    if (hitChance > 0.3) { // 70% chance to hit
       defenderAnimation('hurt');
       setTimeout(() => defenderAnimation('idle'), 500);
       setDefenderHealth(prevHealth => Math.max(prevHealth - ATTACK_DAMAGE, 0));
+      return [true, { x: Math.random() * 5, y: Math.random() * 5, z: Math.random() * 5 }];  // Simulated impact position
     }
+
+    return [false, null];
   }, [gameState]);
 
   // Game loop
@@ -79,10 +88,10 @@ export const useGameLogic = (burgerRef, jeanRef) => {
     const handleKeyPress = (event) => {
       switch (event.key) {
         case 'a':
-          attack('Burger', 'Jean');
+          handleAttack('Burger');  // Use handleAttack directly
           break;
         case 'j':
-          attack('Jean', 'Burger');
+          handleAttack('Jean');  // Use handleAttack directly
           break;
         case ' ':
           if (gameState === 'ready' || gameState === 'roundOver') {
@@ -96,7 +105,7 @@ export const useGameLogic = (burgerRef, jeanRef) => {
 
     window.addEventListener('keydown', handleKeyPress);
     return () => window.removeEventListener('keydown', handleKeyPress);
-  }, [attack, gameState, startRound]);
+  }, [handleAttack, gameState, startRound]);
 
   return {
     burgerHealth,
@@ -106,7 +115,12 @@ export const useGameLogic = (burgerRef, jeanRef) => {
     roundTime,
     burgerAnimation,
     jeanAnimation,
-    resetGame,
     startRound,
+    resetGame,
+    handleAttack,
+    selectedCharacter,
+    setSelectedCharacter,
   };
 };
+
+export default useGameLogic;

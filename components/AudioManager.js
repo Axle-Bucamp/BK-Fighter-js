@@ -1,6 +1,11 @@
-import React, { useEffect, useRef } from 'react';
-import { useThree } from '@react-three/fiber';
+import {
+  useEffect,
+  useRef,
+} from 'react';
+
 import * as THREE from 'three';
+
+import { useThree } from '@react-three/fiber';
 
 const AudioManager = ({ gameState, onAttack, onHit, onGameStart, onGameEnd, musicVolume, sfxVolume }) => {
   const { scene } = useThree();

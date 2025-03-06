@@ -1,0 +1,42 @@
+.mainMenu {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+    background-color: #121212;
+    color: white;
+    font-family: 'Arial', sans-serif;
+    text-align: center;
+  }
+  
+  .mainMenu h1 {
+    font-size: 3rem;
+    margin-bottom: 2rem;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+  }
+  
+  .mainMenu button {
+    background-color: #ff4500;
+    color: white;
+    border: none;
+    padding: 1rem 2rem;
+    font-size: 1.2rem;
+    cursor: pointer;
+    border-radius: 10px;
+    transition: background-color 0.3s ease, transform 0.1s ease;
+    margin: 0.5rem;
+    width: 250px;
+  }
+  
+  .mainMenu button:hover {
+    background-color: #e63e00;
+    transform: scale(1.05);
+  }
+  
+  .mainMenu button:active {
+    background-color: #cc3700;
+    transform: scale(0.98);
+  }
+  

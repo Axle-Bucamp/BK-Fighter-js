@@ -1,6 +1,8 @@
-import React from 'react'
-import { useLoader } from '@react-three/fiber'
-import { TextureLoader } from 'three'
+import React from 'react';
+
+import { TextureLoader } from 'three';
+
+import { useLoader } from '@react-three/fiber';
 
 const Background = () => {
   const texture = useLoader(TextureLoader, '/background.jpg')

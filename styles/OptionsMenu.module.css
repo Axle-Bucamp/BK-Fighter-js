@@ -1,0 +1,71 @@
+.optionsMenu {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+    background-color: #181818;
+    color: white;
+    font-family: 'Arial', sans-serif;
+    text-align: center;
+  }
+  
+  .optionsMenu h2 {
+    font-size: 2.5rem;
+    margin-bottom: 1.5rem;
+  }
+  
+  .volumeControl {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin: 1rem 0;
+  }
+  
+  .optionsMenu label {
+    font-size: 1.2rem;
+    margin-bottom: 0.5rem;
+  }
+  
+  .optionsMenu input[type="range"] {
+    width: 200px;
+    -webkit-appearance: none;
+    transition: background 0.3s ease;
+}
+
+.optionsMenu input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  background: #ff9800;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: background 0.3s ease;
+}
+
+.optionsMenu input[type="range"]::-webkit-slider-thumb:hover {
+  background: #e68900;
+}
+
+.backButton {
+  background-color: #444;
+  color: white;
+  border: none;
+  padding: 1rem 2rem;
+  font-size: 1.2rem;
+  cursor: pointer;
+  border-radius: 10px;
+  transition: background-color 0.3s ease, transform 0.1s ease;
+  margin-top: 2rem;
+}
+
+.backButton:hover {
+  background-color: #666;
+  transform: scale(1.05);
+}
+
+.backButton:active {
+  background-color: #555;
+  transform: scale(0.98);
+}

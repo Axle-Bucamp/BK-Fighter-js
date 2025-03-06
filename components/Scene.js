@@ -1,17 +1,25 @@
-import React, { useEffect, useRef, useCallback, useState } from 'react';
-import { Canvas } from '@react-three/fiber';
+import React, {
+  useCallback,
+  useRef,
+  useState,
+} from 'react';
+
 import { OrbitControls } from '@react-three/drei';
-import BurgerCharacter from './BurgerCharacter';
-import JeanCharacter from './JeanCharacter';
-import Floor from './Floor';
-import Background from './Background';
-import ParticleSystem from './ParticleSystem';
-import GameUI from './GameUI';
+import { Canvas } from '@react-three/fiber';
+
 import AudioManager from './AudioManager';
-import OptionsMenu from './OptionsMenu';
+import Background from './Background';
+import BurgerCharacter from './BurgerCharacter';
+import Floor from './Floor';
 import useGameLogic from './GameLogic';
+import GameUI from './GameUI';
+import JeanCharacter from './JeanCharacter';
+import OptionsMenu from './OptionsMenu';
+import ParticleSystem from './ParticleSystem';
 
 const Scene = () => {
+  const burgerRef = useRef();
+  const jeanRef = useRef();
   const {
     gameState,
     burgerHealth,
@@ -25,7 +33,7 @@ const Scene = () => {
     handleAttack,
     selectedCharacter,
     setSelectedCharacter,
-  } = useGameLogic();
+  } = useGameLogic(burgerRef, jeanRef);
 
   const [impactPosition, setImpactPosition] = useState(null);
   const [showOptions, setShowOptions] = useState(false);
