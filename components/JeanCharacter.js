@@ -1,46 +1,39 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
-import { useAnimations, useGLTF } from '@react-three/drei';
-import * as THREE from 'three';
+import { Box, Sphere, Text } from '@react-three/drei';
 
-export function JeanCharacter({ position, rotation }) {
-  const group = useRef();
-  const { nodes, materials, animations } = useGLTF('/jean_character.glb');
-  const { actions } = useAnimations(animations, group);
+const JeanCharacter = ({ position, animationState }) => {
+  const ref = useRef();
 
-  useEffect(() => {
-    // Start the idle animation by default
-    actions.idle.play();
-  }, [actions]);
-
-  const [animationState, setAnimationState] = React.useState('idle');
-
-  useFrame((state) => {
-    // Add any frame-by-frame updates here
+  useFrame((state, delta) => {
+    if (animationState === 'idle') {
+      ref.current.rotation.y -= delta * 0.5;
+    } else if (animationState === 'attack') {
+      ref.current.rotation.z = Math.sin(state.clock.elapsedTime * 10) * -0.2;
+    } else if (animationState === 'hurt') {
+      ref.current.position.x = position[0] + Math.sin(state.clock.elapsedTime * 20) * -0.1;
+    }
   });
 
-  const triggerAnimation = (animationName) => {
-    if (animationState !== animationName) {
-      actions[animationState].fadeOut(0.5);
-      actions[animationName].reset().fadeIn(0.5).play();
-      setAnimationState(animationName);
-    }
-  };
-
   return (
-    <group ref={group} position={position} rotation={rotation}>
-      <primitive object={nodes.JeanArmature} />
-      <skinnedMesh
-        geometry={nodes.JeanMesh.geometry}
-        material={materials.JeanMaterial}
-        skeleton={nodes.JeanMesh.skeleton}
-      />
-      <mesh position={[0, 2, 0]}>
-        <textGeometry args={['Jean', { font: '/fonts/helvetiker_regular.typeface.json', size: 0.5, height: 0.1 }]} />
-        <meshStandardMaterial color="white" />
-      </mesh>
+    <group ref={ref} position={position}>
+      <Box args={[0.8, 1.5, 0.5]} position={[0, 0.75, 0]}>
+        <meshStandardMaterial color="blue" />
+      </Box>
+      <Sphere args={[0.4, 32, 32]} position={[0, 1.85, 0]}>
+        <meshStandardMaterial color="peachpuff" />
+      </Sphere>
+      <Text
+        position={[0, 2.3, 0]}
+        fontSize={0.5}
+        color="black"
+        anchorX="center"
+        anchorY="middle"
+      >
+        Jean
+      </Text>
     </group>
   );
-}
+};
 
-useGLTF.preload('/jean_character.glb');
+export default JeanCharacter;
