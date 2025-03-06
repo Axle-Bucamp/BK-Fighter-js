@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useCallback } from 'react';
+import React, { useEffect, useRef, useCallback, useState } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls } from '@react-three/drei';
 import BurgerCharacter from './BurgerCharacter';
@@ -8,6 +8,7 @@ import Background from './Background';
 import ParticleSystem from './ParticleSystem';
 import GameUI from './GameUI';
 import AudioManager from './AudioManager';
+import OptionsMenu from './OptionsMenu';
 import useGameLogic from './GameLogic';
 
 const Scene = () => {
@@ -26,7 +27,10 @@ const Scene = () => {
     setSelectedCharacter,
   } = useGameLogic();
 
-  const [impactPosition, setImpactPosition] = React.useState(null);
+  const [impactPosition, setImpactPosition] = useState(null);
+  const [showOptions, setShowOptions] = useState(false);
+  const [musicVolume, setMusicVolume] = useState(0.5);
+  const [sfxVolume, setSfxVolume] = useState(0.5);
 
   const handleCharacterAttack = useCallback((attacker) => {
     const [success, position] = handleAttack(attacker);
@@ -35,6 +39,14 @@ const Scene = () => {
       setTimeout(() => setImpactPosition(null), 1000); // Reset after 1 second
     }
   }, [handleAttack]);
+
+  const handleVolumeChange = useCallback((type, value) => {
+    if (type === 'music') {
+      setMusicVolume(value);
+    } else if (type === 'sfx') {
+      setSfxVolume(value);
+    }
+  }, []);
 
   return (
     <>
@@ -57,17 +69,27 @@ const Scene = () => {
           onHit={() => {}} // Implement hit sound logic if needed
           onGameStart={startRound}
           onGameEnd={resetGame}
+          musicVolume={musicVolume}
+          sfxVolume={sfxVolume}
         />
       </Canvas>
-      <GameUI
-        gameState={gameState}
-        burgerHealth={burgerHealth}
-        jeanHealth={jeanHealth}
-        onStartGame={startRound}
-        onResetGame={resetGame}
-        onCharacterSelect={setSelectedCharacter}
-        selectedCharacter={selectedCharacter}
-      />
+      {showOptions ? (
+        <OptionsMenu
+          onVolumeChange={handleVolumeChange}
+          onBack={() => setShowOptions(false)}
+        />
+      ) : (
+        <GameUI
+          gameState={gameState}
+          burgerHealth={burgerHealth}
+          jeanHealth={jeanHealth}
+          onStartGame={startRound}
+          onResetGame={resetGame}
+          onCharacterSelect={setSelectedCharacter}
+          selectedCharacter={selectedCharacter}
+          onShowOptions={() => setShowOptions(true)}
+        />
+      )}
     </>
   );
 };
