@@ -65,25 +65,6 @@ const Scene = () => {
     setGameState('mainMenu');
   };
 
-  if (gameState === 'mainMenu') {
-    return (
-      <MainMenu
-        onStartGame={handleStartGame}
-        onCharacterSelection={handleCharacterSelection}
-        onOptions={handleOptions}
-      />
-    );
-  }
-
-  if (gameState === 'characterSelection') {
-    return (
-      <CharacterSelection
-        onSelectCharacter={handleSelectCharacter}
-        onBack={handleBackToMainMenu}
-      />
-    );
-  }
-
   return (
     <>
       <Canvas>
@@ -92,9 +73,13 @@ const Scene = () => {
         <pointLight position={[10, 10, 10]} />
         <Suspense fallback={null}>
           <Background />
-          <BurgerCharacter position={burgerPosition} animationState={burgerState} />
-          <JeanCharacter position={jeanPosition} animationState={jeanState} />
-          {impactPosition && <ParticleSystem position={impactPosition} />}
+          {gameState === 'playing' && (
+            <>
+              <BurgerCharacter position={burgerPosition} animationState={burgerState} />
+              <JeanCharacter position={jeanPosition} animationState={jeanState} />
+              {impactPosition && <ParticleSystem position={impactPosition} />}
+            </>
+          )}
         </Suspense>
         <AudioManager
           gameState={gameState}
@@ -104,6 +89,19 @@ const Scene = () => {
           onGameEnd={() => setGameState('gameOver')}
         />
       </Canvas>
+      {gameState === 'mainMenu' && (
+        <MainMenu
+          onStartGame={handleStartGame}
+          onCharacterSelection={handleCharacterSelection}
+          onOptions={handleOptions}
+        />
+      )}
+      {gameState === 'characterSelection' && (
+        <CharacterSelection
+          onSelectCharacter={handleSelectCharacter}
+          onBack={handleBackToMainMenu}
+        />
+      )}
       <GameUI
         gameState={gameState}
         burgerHealth={burgerHealth}
