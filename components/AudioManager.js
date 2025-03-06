@@ -2,7 +2,7 @@ import React, { useEffect, useRef } from 'react';
 import { useThree } from '@react-three/fiber';
 import * as THREE from 'three';
 
-const AudioManager = ({ gameState, onAttack, onHit, onGameStart, onGameEnd }) => {
+const AudioManager = ({ gameState, onAttack, onHit, onGameStart, onGameEnd, musicVolume, sfxVolume }) => {
   const { scene } = useThree();
   const listener = useRef();
   const backgroundMusic = useRef();
@@ -15,34 +15,38 @@ const AudioManager = ({ gameState, onAttack, onHit, onGameStart, onGameEnd }) =>
     listener.current = new THREE.AudioListener();
     scene.add(listener.current);
 
-    // Load audio files
+    backgroundMusic.current = new THREE.Audio(listener.current);
+    attackSound.current = new THREE.Audio(listener.current);
+    hitSound.current = new THREE.Audio(listener.current);
+    gameStartSound.current = new THREE.Audio(listener.current);
+    gameEndSound.current = new THREE.Audio(listener.current);
+
     const audioLoader = new THREE.AudioLoader();
 
-    backgroundMusic.current = new THREE.Audio(listener.current);
     audioLoader.load('/sounds/background_music.mp3', (buffer) => {
       backgroundMusic.current.setBuffer(buffer);
       backgroundMusic.current.setLoop(true);
-      backgroundMusic.current.setVolume(0.5);
+      backgroundMusic.current.setVolume(musicVolume);
     });
 
-    attackSound.current = new THREE.Audio(listener.current);
     audioLoader.load('/sounds/attack.mp3', (buffer) => {
       attackSound.current.setBuffer(buffer);
+      attackSound.current.setVolume(sfxVolume);
     });
 
-    hitSound.current = new THREE.Audio(listener.current);
     audioLoader.load('/sounds/hit.mp3', (buffer) => {
       hitSound.current.setBuffer(buffer);
+      hitSound.current.setVolume(sfxVolume);
     });
 
-    gameStartSound.current = new THREE.Audio(listener.current);
     audioLoader.load('/sounds/game_start.mp3', (buffer) => {
       gameStartSound.current.setBuffer(buffer);
+      gameStartSound.current.setVolume(sfxVolume);
     });
 
-    gameEndSound.current = new THREE.Audio(listener.current);
     audioLoader.load('/sounds/game_end.mp3', (buffer) => {
       gameEndSound.current.setBuffer(buffer);
+      gameEndSound.current.setVolume(sfxVolume);
     });
 
     return () => {
@@ -51,41 +55,53 @@ const AudioManager = ({ gameState, onAttack, onHit, onGameStart, onGameEnd }) =>
   }, [scene]);
 
   useEffect(() => {
-    if (gameState === 'fighting' && !backgroundMusic.current.isPlaying) {
+    if (gameState === 'fighting') {
       backgroundMusic.current.play();
-    } else if (gameState !== 'fighting' && backgroundMusic.current.isPlaying) {
+    } else {
       backgroundMusic.current.pause();
     }
   }, [gameState]);
 
   useEffect(() => {
-    onAttack(() => {
+    backgroundMusic.current.setVolume(musicVolume);
+  }, [musicVolume]);
+
+  useEffect(() => {
+    attackSound.current.setVolume(sfxVolume);
+    hitSound.current.setVolume(sfxVolume);
+    gameStartSound.current.setVolume(sfxVolume);
+    gameEndSound.current.setVolume(sfxVolume);
+  }, [sfxVolume]);
+
+  useEffect(() => {
+    const handleAttack = () => {
       attackSound.current.play();
-    });
+    };
 
-    onHit(() => {
+    const handleHit = () => {
       hitSound.current.play();
-    });
+    };
 
-    onGameStart(() => {
+    const handleGameStart = () => {
       gameStartSound.current.play();
-    });
+    };
 
-    onGameEnd(() => {
+    const handleGameEnd = () => {
       gameEndSound.current.play();
-    });
+    };
+
+    onAttack(handleAttack);
+    onHit(handleHit);
+    onGameStart(handleGameStart);
+    onGameEnd(handleGameEnd);
+
+    return () => {
+      onAttack(null);
+      onHit(null);
+      onGameStart(null);
+      onGameEnd(null);
+    };
   }, [onAttack, onHit, onGameStart, onGameEnd]);
-
-  const setMusicVolume = (volume) => {
-    backgroundMusic.current.setVolume(volume);
-  };
-
-  const setSoundEffectsVolume = (volume) => {
-    attackSound.current.setVolume(volume);
-    hitSound.current.setVolume(volume);
-    gameStartSound.current.setVolume(volume);
-    gameEndSound.current.setVolume(volume);
-  };
 
   return null;
 };
