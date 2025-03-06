@@ -1,74 +1,73 @@
-import React, { useState, useCallback } from 'react';
+import React, { useEffect, useRef, useCallback } from 'react';
 import { Canvas } from '@react-three/fiber';
-import { OrbitControls, Plane } from '@react-three/drei';
+import { OrbitControls } from '@react-three/drei';
 import BurgerCharacter from './BurgerCharacter';
 import JeanCharacter from './JeanCharacter';
-import GameUI from './GameUI';
-import { useGameLogic } from './GameLogic';
+import Floor from './Floor';
 import Background from './Background';
 import ParticleSystem from './ParticleSystem';
+import GameUI from './GameUI';
 import AudioManager from './AudioManager';
+import useGameLogic from './GameLogic';
 
 const Scene = () => {
   const {
+    gameState,
     burgerHealth,
     jeanHealth,
-    gameState,
-    winner,
-    roundTime,
-    burgerAnimation,
-    jeanAnimation,
-    resetGame,
+    burgerPosition,
+    jeanPosition,
+    burgerAnimationState,
+    jeanAnimationState,
     startRound,
+    resetGame,
+    handleAttack,
+    selectedCharacter,
+    setSelectedCharacter,
   } = useGameLogic();
 
-  const [impactPosition, setImpactPosition] = useState(null);
+  const [impactPosition, setImpactPosition] = React.useState(null);
 
-  const handleAttack = useCallback((attacker, defender) => {
-    // Your attack logic here
-    // Update the impact position for particle effects
-    setImpactPosition(defender === 'Burger' ? [-3, 1, 0] : [3, 1, 0]);
-    setTimeout(() => setImpactPosition(null), 500);
-  }, []);
+  const handleCharacterAttack = useCallback((attacker) => {
+    const [success, position] = handleAttack(attacker);
+    if (success) {
+      setImpactPosition(position);
+      setTimeout(() => setImpactPosition(null), 1000); // Reset after 1 second
+    }
+  }, [handleAttack]);
 
   return (
     <>
-      <div style={{ width: '100vw', height: '100vh' }}>
-        <Canvas camera={{ position: [0, 5, 10] }}>
-          <ambientLight intensity={0.5} />
-          <pointLight position={[10, 10, 10]} />
-          <OrbitControls />
-          
-          <Background />
-          
-          <Plane args={[20, 20]} rotation-x={-Math.PI / 2} position-y={-0.5}>
-            <meshStandardMaterial color="green" />
-          </Plane>
-          
-          <BurgerCharacter position={[-3, 0, 0]} animationState={burgerAnimation} />
-          <JeanCharacter position={[3, 0, 0]} animationState={jeanAnimation} />
-          
-          {impactPosition && (
-            <ParticleSystem position={impactPosition} color="#FFA500" count={20} />
-          )}
-          
-          <AudioManager 
-            gameState={gameState}
-            onAttack={handleAttack}
-            onHit={() => {/* Handle hit sound */}}
-            onGameStart={startRound}
-            onGameEnd={resetGame}
-          />
-        </Canvas>
-        
-        <GameUI
+      <Canvas camera={{ position: [0, 5, 10] }}>
+        <OrbitControls />
+        <ambientLight intensity={0.5} />
+        <pointLight position={[10, 10, 10]} />
+        <Background />
+        <Floor />
+        {gameState === 'fighting' && (
+          <>
+            <BurgerCharacter position={burgerPosition} animationState={burgerAnimationState} />
+            <JeanCharacter position={jeanPosition} animationState={jeanAnimationState} />
+            {impactPosition && <ParticleSystem position={impactPosition} />}
+          </>
+        )}
+        <AudioManager
           gameState={gameState}
-          burgerHealth={burgerHealth}
-          jeanHealth={jeanHealth}
-          winner={winner}
-          onStartGame={startRound}
+          onAttack={handleCharacterAttack}
+          onHit={() => {}} // Implement hit sound logic if needed
+          onGameStart={startRound}
+          onGameEnd={resetGame}
         />
-      </div>
+      </Canvas>
+      <GameUI
+        gameState={gameState}
+        burgerHealth={burgerHealth}
+        jeanHealth={jeanHealth}
+        onStartGame={startRound}
+        onResetGame={resetGame}
+        onCharacterSelect={setSelectedCharacter}
+        selectedCharacter={selectedCharacter}
+      />
     </>
   );
 };
