@@ -1,6 +1,7 @@
 import {
   useCallback,
   useEffect,
+  useRef,
   useState,
 } from 'react';
 
@@ -28,6 +29,7 @@ export const useGameLogic = (burgerRef, jeanRef) => {
   const [canAttack, setCanAttack] = useState(true);
   const [burgerPosition, setBurgerPosition] = useState([1,0,0]);
   const [jeanPosition, setJeanPosition] = useState([0,0,0]);
+  const isJumpingRef = useRef({ Burger: false, Jean: false });
 
 
   const resetGame = useCallback(() => {
@@ -137,31 +139,35 @@ export const useGameLogic = (burgerRef, jeanRef) => {
       setTimeout(() => setJeanAnimation('idle'), MOVE_DURATION);
     }
   }, [gameStates]);
-  
+
   const jumpCharacter = useCallback((character) => {
     if (gameStates !== 'fighting') return;
+    if (isJumpingRef.current[character]) return; // Prevent double jumping
   
     const setPosition = character === 'Burger' ? setBurgerPosition : setJeanPosition;
     const setAnim = character === 'Burger' ? setBurgerAnimation : setJeanAnimation;
     
+    isJumpingRef.current[character] = true; // Mark as jumping
+    setAnim('jump');
+  
     let velocity = JUMP_VELOCITY;
     let time = 0;
-
-    setAnim("jump")
-    setTimeout(() => setAnim('idle'), 500);
+  
     const jumpInterval = setInterval(() => {
       setPosition((prev) => {
-        time += 0.05; // Simulate small time increments (50ms per frame)
+        time += 0.05; // Simulating time steps (50ms per frame)
         const newY = prev[1] + velocity * 0.05 + 0.5 * GRAVITY * Math.pow(0.05, 2);
         velocity += GRAVITY * 0.05; // Apply gravity
   
         if (newY <= 0) {
+          setAnim('idle');
+          isJumpingRef.current[character] = false; // Allow next jump
           clearInterval(jumpInterval);
           return [prev[0], 0, prev[2]]; // Reset to ground level
         }
         return [prev[0], newY, prev[2]];
       });
-    }, 50); // Run at 50ms intervals
+    }, 50);
   }, [gameStates]);
   
 useEffect(() => {
