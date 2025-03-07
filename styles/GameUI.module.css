@@ -17,16 +17,26 @@
 .healthBarContainer {
   position: absolute;
   top: 20px;
-  left: 50%;
   transform: translateX(-50%);
   display: flex;
-  width: 40%;
+  width: 25%;
   height: 30px;
   background: #444;
   border-radius: 8px;
   overflow: hidden;
   z-index: 20; /* Above the game */
 }
+
+/* Burger Health Bar - Left Side */
+.burger  {
+  left: 32%;
+}
+
+/* Jean Health Bar - Right Side */
+.jean {
+  left: 59%;
+}
+
 
 /* Health bar fills dynamically */
 .healthBar {

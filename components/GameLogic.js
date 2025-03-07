@@ -116,30 +116,28 @@ export const useGameLogic = (burgerRef, jeanRef) => {
     if (gameStates !== 'fighting') return;
   
     const setPosition = character === 'Burger' ? setBurgerPosition : setJeanPosition;
+    const setAnim = character === 'Burger' ? setBurgerAnimation : setJeanAnimation;
+  
     let velocity = direction === 'left' ? -MOVE_VELOCITY : MOVE_VELOCITY;
-    let elapsedTime = 0;
+    let startTime = performance.now();
+    
+    setAnim('run');
   
-    const moveInterval = setInterval(() => {
-      setPosition((prev) => {
-        elapsedTime += 50; // 50ms per frame
-        const newX = prev[0] + velocity * 0.05; // Simulate velocity-based movement
-        if (elapsedTime >= MOVE_DURATION) {
-          clearInterval(moveInterval);
-        }
-        return [newX, prev[1], prev[2]];
-      });
-    }, 50); // Smooth update every 50ms
+    const animateMove = (currentTime) => {
+      let elapsedTime = currentTime - startTime;
+      if (elapsedTime >= MOVE_DURATION) {
+        setAnim('idle');
+        return;
+      }
   
-    // Set running animation
-    if (character === 'Burger') {
-      setBurgerAnimation('run');
-      setTimeout(() => setBurgerAnimation('idle'), MOVE_DURATION);
-    } else {
-      setJeanAnimation('run');
-      setTimeout(() => setJeanAnimation('idle'), MOVE_DURATION);
-    }
+      setPosition((prev) => [prev[0] + velocity * (elapsedTime / MOVE_DURATION) * 0.1, prev[1], prev[2]]);
+  
+      requestAnimationFrame(animateMove);
+    };
+  
+    requestAnimationFrame(animateMove);
   }, [gameStates]);
-
+  
   const jumpCharacter = useCallback((character) => {
     if (gameStates !== 'fighting') return;
     if (isJumpingRef.current[character]) return; // Prevent double jumping

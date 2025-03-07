@@ -15,7 +15,7 @@ const GameUI = ({
   onShowOptions,
 }) => {
   const renderHealthBar = (health, character) => (
-    <div className={styles.healthBarContainer}>
+    <div   className={`${styles.healthBarContainer} ${character === "Burger" ? styles.burger : styles.jean}`} >
       <div className={styles.healthBar} style={{ width: `${health}%` }}></div>
       <span>{character}: {health}%</span>
     </div>
