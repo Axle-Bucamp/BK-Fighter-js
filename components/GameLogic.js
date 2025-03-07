@@ -6,19 +6,25 @@ import {
 
 const INITIAL_HEALTH = 100;
 const ATTACK_DAMAGE = 10;
-const ROUND_TIME = 60; // 60 seconds per round
+const ROUND_TIME = 60;
+const MOVE_SPEED = 1;
+const JUMP_HEIGHT = 2;
+const ATTACK_COOLDOWN = 500;
 
 export const useGameLogic = (burgerRef, jeanRef) => {
   const [burgerHealth, setBurgerHealth] = useState(INITIAL_HEALTH);
   const [jeanHealth, setJeanHealth] = useState(INITIAL_HEALTH);
-  const [gameState, setGameState] = useState('ready'); // 'ready', 'fighting', 'roundOver', 'gameOver'
+  const [gameStates, setGameState] = useState('ready');
   const [winner, setWinner] = useState(null);
   const [roundTime, setRoundTime] = useState(ROUND_TIME);
   const [burgerAnimation, setBurgerAnimation] = useState('idle');
   const [jeanAnimation, setJeanAnimation] = useState('idle');
-  const [selectedCharacter, setSelectedCharacter] = useState(null); // Added state for selectedCharacter
+  const [canAttack, setCanAttack] = useState(true);
+  const [burgerPosition, setBurgerPosition] = useState(0);
+  const [jeanPosition, setJeanPosition] = useState(0);
 
   const resetGame = useCallback(() => {
+    console.log("reset-direct")
     setBurgerHealth(INITIAL_HEALTH);
     setJeanHealth(INITIAL_HEALTH);
     setGameState('ready');
@@ -26,7 +32,9 @@ export const useGameLogic = (burgerRef, jeanRef) => {
     setRoundTime(ROUND_TIME);
     setBurgerAnimation('idle');
     setJeanAnimation('idle');
-    setSelectedCharacter(null); // Reset selectedCharacter as well
+    setBurgerPosition(0);
+    setJeanPosition(0);
+    setCanAttack(true);
   }, []);
 
   const startRound = useCallback(() => {
@@ -34,7 +42,7 @@ export const useGameLogic = (burgerRef, jeanRef) => {
   }, []);
 
   const endRound = useCallback(() => {
-    setGameState('roundOver');
+    setGameState('roundOver'); // Prevent instant reset
     if (burgerHealth > jeanHealth) {
       setWinner('Burger');
     } else if (jeanHealth > burgerHealth) {
@@ -42,75 +50,130 @@ export const useGameLogic = (burgerRef, jeanRef) => {
     } else {
       setWinner('Draw');
     }
-  }, [burgerHealth, jeanHealth]);
+  
+    // Delay reset to avoid immediate return to "ready"
+    console.log("reset")
+    setTimeout(() => {
+      resetGame();
+    }, 3000); // 3 seconds delay before resetting
+  }, [burgerHealth, jeanHealth, resetGame]);
+  
 
   const handleAttack = useCallback((attacker) => {
-    if (gameState !== 'fighting') return [false, null];
+    let success = false;
+    let position = null;
 
-    const attackerAnimation = attacker === 'Burger' ? setBurgerAnimation : setJeanAnimation;
-    const defenderAnimation = attacker === 'Burger' ? setJeanAnimation : setBurgerAnimation;
-    const setDefenderHealth = attacker === 'Burger' ? setJeanHealth : setBurgerHealth;
-
-    attackerAnimation('attack');
-    setTimeout(() => attackerAnimation('idle'), 500);
-
-    const hitChance = Math.random();
-    if (hitChance > 0.3) { // 70% chance to hit
-      defenderAnimation('hurt');
-      setTimeout(() => defenderAnimation('idle'), 500);
-      setDefenderHealth(prevHealth => Math.max(prevHealth - ATTACK_DAMAGE, 0));
-      return [true, { x: Math.random() * 5, y: Math.random() * 5, z: Math.random() * 5 }];  // Simulated impact position
+    // Example attack logic
+    if (attacker === 'burger') {
+      // Simulate attack logic
+      if (Math.random() > 0.3) {
+        success = true;
+        position = [Math.random() * 10, Math.random() * 10]; // Random impact position
+        setJeanHealth(prevHealth => Math.max(0, prevHealth - 10));
+      }
+    } else if (attacker === 'jean') {
+      if (Math.random() > 0.5) {
+        success = true;
+        position = [Math.random() * 10, Math.random() * 10]; // Random impact position
+        setBurgerHealth(prevHealth => Math.max(0, prevHealth - 10));
+      }
     }
 
-    return [false, null];
-  }, [gameState]);
+    return [success, position];
+  }, [burgerHealth, jeanHealth]);
 
-  // Game loop
-  useEffect(() => {
-    if (gameState !== 'fighting') return;
-
-    const timer = setInterval(() => {
-      setRoundTime(prevTime => {
-        if (prevTime <= 0 || burgerHealth <= 0 || jeanHealth <= 0) {
-          clearInterval(timer);
-          endRound();
-          return 0;
-        }
-        return prevTime - 1;
-      });
-    }, 1000);
-
-    return () => clearInterval(timer);
-  }, [gameState, burgerHealth, jeanHealth, endRound]);
-
-  // Key press handler
-  useEffect(() => {
-    const handleKeyPress = (event) => {
-      switch (event.key) {
-        case 'a':
-          handleAttack('Burger');  // Use handleAttack directly
-          break;
-        case 'j':
-          handleAttack('Jean');  // Use handleAttack directly
-          break;
-        case ' ':
-          if (gameState === 'ready' || gameState === 'roundOver') {
-            startRound();
-          }
-          break;
-        default:
-          break;
+  const moveCharacter = useCallback((character, direction) => {
+    if (gameStates !== 'fighting') return;
+    console.log("move");
+    const updatePosition = (prevPosition) => prevPosition[2] + (direction === 'left' ? -MOVE_SPEED : MOVE_SPEED);
+  
+    const setCharacterAnimation = (char) => {
+      if (char === 'Burger') {
+        setBurgerAnimation('run');
+        setTimeout(() => setBurgerAnimation('idle'), 300); // Reset to idle after animation time
+      } else {
+        setJeanAnimation('run');
+        setTimeout(() => setJeanAnimation('idle'), 300);
       }
     };
+    
+    if (character === 'Burger') {
+      setBurgerPosition((prev) => updatePosition(prev));
+      console.log(burgerPosition);
+      setCharacterAnimation('Burger');
+    } else {
+      setJeanPosition((prev) => updatePosition(prev));
+      console.log(jeanPosition);
+      setCharacterAnimation('Jean');
+    }
+  }, [gameStates]);
+  
+  const jumpCharacter = useCallback((character) => {
+    if (gameStates !== 'fighting') return;
+  
+    const characterRef = character === 'Burger' ? burgerRef : jeanRef;
+    if (!characterRef?.current) return;
+  
+    const jump = () => {
+      characterRef.current.style.transition = 'transform 0.3s ease';
+      characterRef.current.style.transform = `translateY(-${JUMP_HEIGHT}px)`;
+      setTimeout(() => {
+        characterRef.current.style.transform = 'translateY(0)';
+      }, 300); // Reset the position after jump animation time
+    };
+  
+    jump();
+  }, [gameStates, burgerRef, jeanRef]);
+  
+useEffect(() => {
+  //if ( gameStates !== 'fighting') return;
+  
+  const timer = setInterval(() => {
+    setRoundTime((prevTime) => {
+      if (prevTime <= 1) {
+        clearInterval(timer);
+        setTimeout(endRound, 1000); // Give a delay before ending the round
+        return 0;
+      }
+      return prevTime - 1;
+    });
+  }, 1000);
 
+  return () => clearInterval(timer);
+}, [gameStates, endRound]);
+
+  useEffect(() => {
+    const handleKeyPress = (event) => {
+      
+      if ( gameStates === 'fighting') {
+        switch (event.key) {
+          case 'a': moveCharacter('Burger', 'left'); break;
+          case 'd': moveCharacter('Burger', 'right'); break;
+          case 'w': jumpCharacter('Burger'); break;
+          case 'j': moveCharacter('Jean', 'left'); break;
+          case 'l': moveCharacter('Jean', 'right'); break;
+          case 'i': jumpCharacter('Jean'); break;
+          case 's': handleAttack?.('Burger'); break; // Added optional chaining to prevent errors
+          case 'k': handleAttack?.('Jean'); break;
+          default: break;
+        }
+      }
+      console.log(event.key)
+      console.log(gameStates)
+  
+      if (gameStates === 'ready' || gameStates === 'roundOver') {
+        if (event.key === ' ') startRound();
+      }
+    };
+  
     window.addEventListener('keydown', handleKeyPress);
     return () => window.removeEventListener('keydown', handleKeyPress);
-  }, [handleAttack, gameState, startRound]);
+  }, [handleAttack, moveCharacter, jumpCharacter, gameStates, startRound]);
 
   return {
     burgerHealth,
     jeanHealth,
-    gameState,
+    gameStates,
     winner,
     roundTime,
     burgerAnimation,
@@ -118,8 +181,8 @@ export const useGameLogic = (burgerRef, jeanRef) => {
     startRound,
     resetGame,
     handleAttack,
-    selectedCharacter,
-    setSelectedCharacter,
+    burgerPosition,
+    jeanPosition,
   };
 };
 

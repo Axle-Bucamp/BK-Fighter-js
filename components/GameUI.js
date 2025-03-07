@@ -1,10 +1,11 @@
 import React from 'react';
+
 import styles from '../styles/GameUI.module.css';
-import MainMenu from './MainMenu';
 import CharacterSelection from './CharacterSelection';
+import MainMenu from './MainMenu';
 
 const GameUI = ({
-  gameState,
+  gameStates,
   burgerHealth,
   jeanHealth,
   onStartGame,
@@ -27,30 +28,32 @@ const GameUI = ({
       <button onClick={onResetGame}>Play Again</button>
     </div>
   );
-
-  switch (gameState) {
+  
+  switch (gameStates) {
     case 'mainMenu':
       return (
         <MainMenu
           onStartGame={onStartGame}
-          onCharacterSelection={() => onCharacterSelect(null)}
+          onCharacterSelection={() => onCharacterSelect(null)} // Open character selection
           onOptions={onShowOptions}
         />
       );
-    case 'characterSelection':
+    case 'characterSelect':
       return (
         <CharacterSelection
           onSelectCharacter={onCharacterSelect}
-          onBack={() => onCharacterSelect(null)}
+          onBack={() => onCharacterSelect(null)} // Go back to main menu
         />
       );
     case 'ready':
+      console.log(gameStates);
       return (
         <div className={styles.startScreen}>
           <h2>Press Space to Start</h2>
         </div>
       );
     case 'fighting':
+      console.log(gameStates);
       return (
         <div className={styles.gameUI}>
           {renderHealthBar(burgerHealth, 'Burger')}
@@ -58,6 +61,7 @@ const GameUI = ({
         </div>
       );
     case 'gameOver':
+      console.log("game over")
       return renderGameOver();
     default:
       return null;

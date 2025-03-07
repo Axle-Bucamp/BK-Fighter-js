@@ -10,101 +10,103 @@ import { useThree } from '@react-three/fiber';
 const AudioManager = ({ gameState, onAttack, onHit, onGameStart, onGameEnd, musicVolume, sfxVolume }) => {
   const { scene } = useThree();
   const listener = useRef();
-  const backgroundMusic = useRef();
-  const attackSound = useRef();
-  const hitSound = useRef();
-  const gameStartSound = useRef();
-  const gameEndSound = useRef();
+  const audioRefs = useRef({
+    backgroundMusic: null,
+    attackSound: null,
+    hitSound: null,
+    gameStartSound: null,
+    gameEndSound: null,
+  });
 
+  // Load audio files and initialize audio objects
   useEffect(() => {
     listener.current = new THREE.AudioListener();
     scene.add(listener.current);
 
-    backgroundMusic.current = new THREE.Audio(listener.current);
-    attackSound.current = new THREE.Audio(listener.current);
-    hitSound.current = new THREE.Audio(listener.current);
-    gameStartSound.current = new THREE.Audio(listener.current);
-    gameEndSound.current = new THREE.Audio(listener.current);
-
     const audioLoader = new THREE.AudioLoader();
+    const soundUrls = {
+      backgroundMusic: '/sounds/background_music.mp3',
+      attackSound: '/sounds/attack.mp3',
+      hitSound: '/sounds/hit.mp3',
+      gameStartSound: '/sounds/game_start.mp3',
+      gameEndSound: '/sounds/game_end.mp3',
+    };
 
-    audioLoader.load('/sounds/background_music.mp3', (buffer) => {
-      backgroundMusic.current.setBuffer(buffer);
-      backgroundMusic.current.setLoop(true);
-      backgroundMusic.current.setVolume(musicVolume);
+    // Load each sound and check if it's properly loaded before accessing
+    Object.entries(soundUrls).forEach(([key, url]) => {
+      audioLoader.load(url, (buffer) => {
+        audioRefs.current[key] = new THREE.Audio(listener.current);
+        audioRefs.current[key].setBuffer(buffer);
+        audioRefs.current[key].setVolume(key === 'backgroundMusic' ? musicVolume : sfxVolume);
+        if (key === 'backgroundMusic') {
+          audioRefs.current[key].setLoop(true);
+        }
+      }, undefined, (err) => {
+        console.error(`Error loading sound ${key}:`, err);
+      });
     });
 
-    audioLoader.load('/sounds/attack.mp3', (buffer) => {
-      attackSound.current.setBuffer(buffer);
-      attackSound.current.setVolume(sfxVolume);
-    });
-
-    audioLoader.load('/sounds/hit.mp3', (buffer) => {
-      hitSound.current.setBuffer(buffer);
-      hitSound.current.setVolume(sfxVolume);
-    });
-
-    audioLoader.load('/sounds/game_start.mp3', (buffer) => {
-      gameStartSound.current.setBuffer(buffer);
-      gameStartSound.current.setVolume(sfxVolume);
-    });
-
-    audioLoader.load('/sounds/game_end.mp3', (buffer) => {
-      gameEndSound.current.setBuffer(buffer);
-      gameEndSound.current.setVolume(sfxVolume);
-    });
-
+    // Cleanup listener and disconnect audio when the component unmounts
     return () => {
       scene.remove(listener.current);
+      Object.values(audioRefs.current).forEach(audio => audio && audio.disconnect());
     };
-  }, [scene]);
+  }, [scene, musicVolume, sfxVolume]);
 
+  // Play/pause background music based on game state
   useEffect(() => {
-    if (gameState === 'fighting') {
-      backgroundMusic.current.play();
-    } else {
-      backgroundMusic.current.pause();
+    if (audioRefs.current.backgroundMusic && gameState === 'ready' || gameState === 'fighting') {
+      audioRefs.current.backgroundMusic.play();
+    } else if (audioRefs.current.backgroundMusic) {
+      audioRefs.current.backgroundMusic.pause();
     }
   }, [gameState]);
 
+  // Update volume of background music and sound effects when volume props change
   useEffect(() => {
-    backgroundMusic.current.setVolume(musicVolume);
+    if (audioRefs.current.backgroundMusic) {
+      audioRefs.current.backgroundMusic.setVolume(musicVolume);
+    }
   }, [musicVolume]);
 
   useEffect(() => {
-    attackSound.current.setVolume(sfxVolume);
-    hitSound.current.setVolume(sfxVolume);
-    gameStartSound.current.setVolume(sfxVolume);
-    gameEndSound.current.setVolume(sfxVolume);
+    Object.entries(audioRefs.current).forEach(([key, audio]) => {
+      if (key !== 'backgroundMusic' && audio) {
+        audio.setVolume(sfxVolume);
+      }
+    });
   }, [sfxVolume]);
 
+  // Handle events for attack, hit, game start, and game end
   useEffect(() => {
-    const handleAttack = () => {
-      attackSound.current.play();
+    const playSound = (soundRef) => {
+      if (soundRef && soundRef.play) {
+        soundRef.play();
+      }
     };
 
-    const handleHit = () => {
-      hitSound.current.play();
-    };
+    if (onAttack && audioRefs.current.attackSound) {
+      onAttack(() => playSound(audioRefs.current.attackSound));
+    }
 
-    const handleGameStart = () => {
-      gameStartSound.current.play();
-    };
+    if (onHit && audioRefs.current.hitSound) {
+      onHit(() => playSound(audioRefs.current.hitSound));
+    }
 
-    const handleGameEnd = () => {
-      gameEndSound.current.play();
-    };
+    if (onGameStart && audioRefs.current.gameStartSound) {
+      onGameStart(() => playSound(audioRefs.current.gameStartSound));
+    }
 
-    onAttack(handleAttack);
-    onHit(handleHit);
-    onGameStart(handleGameStart);
-    onGameEnd(handleGameEnd);
+    if (onGameEnd && audioRefs.current.gameEndSound) {
+      onGameEnd(() => playSound(audioRefs.current.gameEndSound));
+    }
 
+    // Cleanup when events are removed
     return () => {
-      onAttack(null);
-      onHit(null);
-      onGameStart(null);
-      onGameEnd(null);
+      if (onAttack) onAttack(null);
+      if (onHit) onHit(null);
+      if (onGameStart) onGameStart(null);
+      if (onGameEnd) onGameEnd(null);
     };
   }, [onAttack, onHit, onGameStart, onGameEnd]);
 

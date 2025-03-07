@@ -1,4 +1,5 @@
 import React from 'react';
+
 import styles from '../styles/MainMenu.module.css';
 
 const MainMenu = ({ onStartGame, onCharacterSelection, onOptions }) => {

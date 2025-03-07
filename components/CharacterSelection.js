@@ -1,8 +1,9 @@
 import React from 'react';
+
 import styles from '../styles/CharacterSelection.module.css';
 
 const CharacterSelection = ({ onSelectCharacter, onBack }) => {
-  const characters = ['Burger', 'Jean']; // Add more characters as needed
+  const characters = ['Burger', 'Jean'];
 
   return (
     <div className={styles.characterSelection}>

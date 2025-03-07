@@ -1,4 +1,5 @@
 import React from 'react';
+
 import styles from '../styles/OptionsMenu.module.css';
 
 const OptionsMenu = ({ onVolumeChange, onBack }) => {

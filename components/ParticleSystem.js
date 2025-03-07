@@ -1,6 +1,11 @@
-import React, { useRef, useMemo } from 'react'
-import { useFrame } from '@react-three/fiber'
-import * as THREE from 'three'
+import React, {
+  useMemo,
+  useRef,
+} from 'react';
+
+import * as THREE from 'three';
+
+import { useFrame } from '@react-three/fiber';
 
 const ParticleSystem = ({ position, color = '#ffffff', count = 20 }) => {
   const mesh = useRef()
