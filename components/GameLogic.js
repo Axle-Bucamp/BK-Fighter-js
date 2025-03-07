@@ -148,7 +148,7 @@ export const useGameLogic = (burgerRef, jeanRef) => {
     let time = 0;
 
     setAnim("jump")
-    setTimeout(() => setAnim('idle'), jumpInterval);
+    setTimeout(() => setAnim('idle'), 500);
     const jumpInterval = setInterval(() => {
       setPosition((prev) => {
         time += 0.05; // Simulate small time increments (50ms per frame)
