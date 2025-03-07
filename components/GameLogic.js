@@ -10,6 +10,12 @@ const ROUND_TIME = 60;
 const MOVE_SPEED = 1;
 const JUMP_HEIGHT = 2;
 const ATTACK_COOLDOWN = 500;
+const JUMP_VELOCITY = 5; // Initial velocity for the jump
+const GRAVITY = -9.8; // Simulated gravity
+const MOVE_VELOCITY = 2; // Speed per frame
+const MOVE_DURATION = 300; // Movement lasts for 300ms
+const ATTACK_RANGE = 2; // Define attack range
+
 
 export const useGameLogic = (burgerRef, jeanRef) => {
   const [burgerHealth, setBurgerHealth] = useState(INITIAL_HEALTH);
@@ -20,8 +26,9 @@ export const useGameLogic = (burgerRef, jeanRef) => {
   const [burgerAnimation, setBurgerAnimation] = useState('idle');
   const [jeanAnimation, setJeanAnimation] = useState('idle');
   const [canAttack, setCanAttack] = useState(true);
-  const [burgerPosition, setBurgerPosition] = useState(0);
-  const [jeanPosition, setJeanPosition] = useState(0);
+  const [burgerPosition, setBurgerPosition] = useState([1,0,0]);
+  const [jeanPosition, setJeanPosition] = useState([0,0,0]);
+
 
   const resetGame = useCallback(() => {
     console.log("reset-direct")
@@ -32,8 +39,8 @@ export const useGameLogic = (burgerRef, jeanRef) => {
     setRoundTime(ROUND_TIME);
     setBurgerAnimation('idle');
     setJeanAnimation('idle');
-    setBurgerPosition(0);
-    setJeanPosition(0);
+    setBurgerPosition([1,0,0]);
+    setJeanPosition([0,0,0]);
     setCanAttack(true);
   }, []);
 
@@ -60,70 +67,102 @@ export const useGameLogic = (burgerRef, jeanRef) => {
   
 
   const handleAttack = useCallback((attacker) => {
+    console.log("attack")
+    if (!canAttack) return; // Prevent spamming attacks
+  
     let success = false;
     let position = null;
+    let attackerPosition, defenderPosition, setDefenderHealth, defenderAnimation;
+    console.log(attacker)
 
-    // Example attack logic
-    if (attacker === 'burger') {
-      // Simulate attack logic
-      if (Math.random() > 0.3) {
-        success = true;
-        position = [Math.random() * 10, Math.random() * 10]; // Random impact position
-        setJeanHealth(prevHealth => Math.max(0, prevHealth - 10));
-      }
-    } else if (attacker === 'jean') {
-      if (Math.random() > 0.5) {
-        success = true;
-        position = [Math.random() * 10, Math.random() * 10]; // Random impact position
-        setBurgerHealth(prevHealth => Math.max(0, prevHealth - 10));
-      }
+    if (attacker === 'Burger') {
+      attackerPosition = burgerPosition;
+      defenderPosition = jeanPosition;
+      setDefenderHealth = setJeanHealth;
+      defenderAnimation = jeanAnimation;
+      setBurgerAnimation('attack')
+      setTimeout(() => setBurgerAnimation('idle'), 500);
+    } else {
+      attackerPosition = jeanPosition;
+      defenderPosition = burgerPosition;
+      setDefenderHealth = setBurgerHealth;
+      defenderAnimation = burgerAnimation;
+      setJeanAnimation('attack')
+      setTimeout(() => setJeanAnimation('idle'), 500);
     }
-
+  
+    // Calculate distance between characters
+    const distance = Math.abs(attackerPosition[0] - defenderPosition[0]);
+    console.log(distance)
+    // Check if within range & defender is not in attack state
+    if (distance <= ATTACK_RANGE && defenderAnimation !== 'attack') {
+      success = true;
+      position = [attackerPosition[0], attackerPosition[1]]; // Impact position
+  
+      setDefenderHealth(prevHealth => Math.max(0, prevHealth - ATTACK_DAMAGE));
+      console.log(jeanHealth)
+    }
+  
+    // Set cooldown to prevent spamming attacks
+    setCanAttack(false);
+    setTimeout(() => setCanAttack(true), ATTACK_COOLDOWN);
+  
     return [success, position];
-  }, [burgerHealth, jeanHealth]);
+  }, [burgerPosition, jeanPosition, burgerAnimation, jeanAnimation, canAttack]);
 
   const moveCharacter = useCallback((character, direction) => {
     if (gameStates !== 'fighting') return;
-    console.log("move");
-    const updatePosition = (prevPosition) => prevPosition[2] + (direction === 'left' ? -MOVE_SPEED : MOVE_SPEED);
   
-    const setCharacterAnimation = (char) => {
-      if (char === 'Burger') {
-        setBurgerAnimation('run');
-        setTimeout(() => setBurgerAnimation('idle'), 300); // Reset to idle after animation time
-      } else {
-        setJeanAnimation('run');
-        setTimeout(() => setJeanAnimation('idle'), 300);
-      }
-    };
-    
+    const setPosition = character === 'Burger' ? setBurgerPosition : setJeanPosition;
+    let velocity = direction === 'left' ? -MOVE_VELOCITY : MOVE_VELOCITY;
+    let elapsedTime = 0;
+  
+    const moveInterval = setInterval(() => {
+      setPosition((prev) => {
+        elapsedTime += 50; // 50ms per frame
+        const newX = prev[0] + velocity * 0.05; // Simulate velocity-based movement
+        if (elapsedTime >= MOVE_DURATION) {
+          clearInterval(moveInterval);
+        }
+        return [newX, prev[1], prev[2]];
+      });
+    }, 50); // Smooth update every 50ms
+  
+    // Set running animation
     if (character === 'Burger') {
-      setBurgerPosition((prev) => updatePosition(prev));
-      console.log(burgerPosition);
-      setCharacterAnimation('Burger');
+      setBurgerAnimation('run');
+      setTimeout(() => setBurgerAnimation('idle'), MOVE_DURATION);
     } else {
-      setJeanPosition((prev) => updatePosition(prev));
-      console.log(jeanPosition);
-      setCharacterAnimation('Jean');
+      setJeanAnimation('run');
+      setTimeout(() => setJeanAnimation('idle'), MOVE_DURATION);
     }
   }, [gameStates]);
   
   const jumpCharacter = useCallback((character) => {
     if (gameStates !== 'fighting') return;
   
-    const characterRef = character === 'Burger' ? burgerRef : jeanRef;
-    if (!characterRef?.current) return;
+    const setPosition = character === 'Burger' ? setBurgerPosition : setJeanPosition;
+    const setAnim = character === 'Burger' ? setBurgerAnimation : setJeanAnimation;
+    
+    let velocity = JUMP_VELOCITY;
+    let time = 0;
+
+    setAnim("jump")
+    setTimeout(() => setAnim('idle'), jumpInterval);
+    const jumpInterval = setInterval(() => {
+      setPosition((prev) => {
+        time += 0.05; // Simulate small time increments (50ms per frame)
+        const newY = prev[1] + velocity * 0.05 + 0.5 * GRAVITY * Math.pow(0.05, 2);
+        velocity += GRAVITY * 0.05; // Apply gravity
   
-    const jump = () => {
-      characterRef.current.style.transition = 'transform 0.3s ease';
-      characterRef.current.style.transform = `translateY(-${JUMP_HEIGHT}px)`;
-      setTimeout(() => {
-        characterRef.current.style.transform = 'translateY(0)';
-      }, 300); // Reset the position after jump animation time
-    };
-  
-    jump();
-  }, [gameStates, burgerRef, jeanRef]);
+        if (newY <= 0) {
+          clearInterval(jumpInterval);
+          return [prev[0], 0, prev[2]]; // Reset to ground level
+        }
+        return [prev[0], newY, prev[2]];
+      });
+    }, 50); // Run at 50ms intervals
+  }, [gameStates]);
   
 useEffect(() => {
   //if ( gameStates !== 'fighting') return;
@@ -137,7 +176,7 @@ useEffect(() => {
       }
       return prevTime - 1;
     });
-  }, 1000);
+  }, 6000);
 
   return () => clearInterval(timer);
 }, [gameStates, endRound]);

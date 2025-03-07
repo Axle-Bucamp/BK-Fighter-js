@@ -146,6 +146,8 @@ const Scene = () => {
                 ref={burgerRef}
                 position={burgerPosition}
                 animationState={burgerAnimation}
+                //movement={playerMoveDirection} 
+                //jumpState={playerJump}
               />
 
               <JeanCharacter
